@@ -56,10 +56,8 @@ class ProcessCsvUpload implements ShouldQueue
             // Update status to processing
             $this->upload->update(['status' => 'processing']);
 
-            // Read cleaned content from storage and ensure UTF-8
+            // Read cleaned content from storage
             $cleanedContent = Utf8Cleaner::cleanUtf8(file_get_contents($filePath));
-
-            // Parse CSV directly from string (no temp file required)
             $csv = Reader::createFromString($cleanedContent);
             $csv->setHeaderOffset(0);
 
@@ -67,7 +65,7 @@ class ProcessCsvUpload implements ShouldQueue
             $processedCount = 0;
             $errorCount = 0;
 
-            // Process records in chunks for better performance
+            // Process records in chunks 
             DB::beginTransaction();
             
             try {
@@ -85,7 +83,7 @@ class ProcessCsvUpload implements ShouldQueue
                             return is_string($value) ? Utf8Cleaner::cleanUtf8($value) : $value;
                         }, $record);
 
-                        // UPSERT - Update if exists, create if doesn't
+                        // UPSERT 
                         Product::updateOrCreate(
                             ['unique_key' => trim($cleanedRecord['UNIQUE_KEY'])],
                             [
