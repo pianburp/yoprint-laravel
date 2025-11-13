@@ -26,17 +26,16 @@ class UploadController extends Controller
         $file = $request->file('file');
         $originalName = $file->getClientOriginalName();
 
-        // Read raw content, clean non-UTF-8 characters and compute a stable hash.
+        // Read content
         $rawContent = file_get_contents($file->getRealPath());
         $cleanedContent = Utf8Cleaner::cleanUtf8($rawContent);
 
-        // Use sha1 of cleaned content to derive a stable filename so repeated uploads of the same file
         // don't create duplicate upload records.
         $hash = sha1($cleanedContent);
         $sanitizedOriginal = preg_replace('/[^a-zA-Z0-9._-]/', '_', $originalName);
         $fileName = $hash . '_' . $sanitizedOriginal;
 
-        // Store cleaned content; overwrite if same file already exists.
+        // Store
         $filePath = Storage::put('uploads/' . $fileName, $cleanedContent);
 
         if ($filePath === false) {
@@ -46,14 +45,14 @@ class UploadController extends Controller
             ], 500);
         }
 
-        // Create or update upload entry (idempotent)
-        // Create or update upload entry (idempotent). Update uploaded_at to now for repeated uploads.
+        // Upsert 
+
         $upload = Upload::updateOrCreate(
             ['file_name' => $fileName],
             ['status' => 'pending', 'uploaded_at' => Carbon::now()]
         );
 
-        // Dispatch the job to process the file in background
+        // process the file in background
         ProcessCsvUpload::dispatch($upload);
 
         return response()->json([

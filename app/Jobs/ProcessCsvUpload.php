@@ -112,7 +112,6 @@ class ProcessCsvUpload implements ShouldQueue
                 throw $e;
             }
 
-            // No temp file to clean up when parsing from string
 
             // Update status to completed
             $this->upload->update(['status' => 'completed']);

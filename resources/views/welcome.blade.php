@@ -70,15 +70,11 @@
                     return;
                 }
 
-                // Create FormData and append the file
                 const formData = new FormData();
                 formData.append('file', file);
-
-                // Get CSRF token
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
 
                 try {
-                    // Show uploading status immediately
                     const tableBody = document.getElementById('file-table-body');
                     const newRow = document.createElement('tr');
                     newRow.innerHTML = `
@@ -105,14 +101,11 @@
                     const result = await response.json();
 
                     if (response.ok && result.success) {
-                        // Update the row to show pending status
                         newRow.innerHTML = `
                             <td class="px-6 py-4 border-b text-sm text-gray-700">${new Date().toLocaleString()}</td>
                             <td class="px-6 py-4 border-b text-sm text-gray-700">${file.name}</td>
                             <td class="px-6 py-4 border-b text-sm text-yellow-500">Pending</td>
                         `;
-                        
-                        // Clear file input
                         fileInput.value = '';
                         
                         // Fetch updated list
@@ -194,10 +187,10 @@
             function startRealTimeUpdates() {
                 setInterval(async () => {
                     await fetchRecentUploads();
-                }, 5000); // Poll every 5 seconds
+                }, 5000); 
             }
 
-            // Fetch recent uploads on page load
+            // Fetch recent uploads 
             document.addEventListener('DOMContentLoaded', () => {
                 fetchRecentUploads();
                 startRealTimeUpdates();

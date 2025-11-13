@@ -16,7 +16,7 @@ class Utf8Cleaner
             return $string;
         }
 
-        // Convert to UTF-8 and remove invalid sequences
+        // Convert to UTF-8 
         $string = mb_convert_encoding($string, 'UTF-8', 'UTF-8');
 
         // Remove zero-width and problematic Unicode characters
