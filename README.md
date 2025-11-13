@@ -1,4 +1,4 @@
-**YoPrint - CSV Product Importer (Laravel)**
+# YoPrint - CSV Product Importer (Laravel)
 
 A small Laravel application that accepts CSV uploads, processes them in the background, and upserts product rows into the database.
 
