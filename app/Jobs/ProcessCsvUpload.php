@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Product;
 use App\Models\Upload;
+use App\Traits\Utf8Cleaner;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -55,15 +56,11 @@ class ProcessCsvUpload implements ShouldQueue
             // Update status to processing
             $this->upload->update(['status' => 'processing']);
 
-            // Read and clean the file content
-            $cleanedContent = $this->cleanUtf8(file_get_contents($filePath));
-            
-            // Create a temporary file with cleaned content
-            $tempFile = tempnam(sys_get_temp_dir(), 'csv_');
-            file_put_contents($tempFile, $cleanedContent);
+            // Read cleaned content from storage and ensure UTF-8
+            $cleanedContent = Utf8Cleaner::cleanUtf8(file_get_contents($filePath));
 
-            // Parse CSV
-            $csv = Reader::createFromPath($tempFile, 'r');
+            // Parse CSV directly from string (no temp file required)
+            $csv = Reader::createFromString($cleanedContent);
             $csv->setHeaderOffset(0);
 
             $records = $csv->getRecords();
@@ -85,7 +82,7 @@ class ProcessCsvUpload implements ShouldQueue
 
                         // Clean all string values
                         $cleanedRecord = array_map(function ($value) {
-                            return is_string($value) ? $this->cleanUtf8($value) : $value;
+                            return is_string($value) ? Utf8Cleaner::cleanUtf8($value) : $value;
                         }, $record);
 
                         // UPSERT - Update if exists, create if doesn't
@@ -115,8 +112,7 @@ class ProcessCsvUpload implements ShouldQueue
                 throw $e;
             }
 
-            // Clean up temp file
-            unlink($tempFile);
+            // No temp file to clean up when parsing from string
 
             // Update status to completed
             $this->upload->update(['status' => 'completed']);
@@ -139,23 +135,7 @@ class ProcessCsvUpload implements ShouldQueue
      * @param string $string
      * @return string
      */
-    protected function cleanUtf8($string)
-    {
-        if (!is_string($string)) {
-            return $string;
-        }
-
-        // Remove any non-UTF-8 characters
-        $string = mb_convert_encoding($string, 'UTF-8', 'UTF-8');
-        
-        // Remove any invalid UTF-8 sequences
-        $string = iconv('UTF-8', 'UTF-8//IGNORE', $string);
-        
-        // Remove zero-width characters and other problematic Unicode chars
-        $string = preg_replace('/[\x{200B}-\x{200D}\x{FEFF}]/u', '', $string);
-        
-        return $string;
-    }
+    // Cleaning logic moved to App\Traits\Utf8Cleaner to avoid duplication
 
     /**
      * Parse price from string

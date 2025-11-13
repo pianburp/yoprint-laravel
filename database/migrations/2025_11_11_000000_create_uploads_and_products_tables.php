@@ -14,7 +14,7 @@ return new class extends Migration {
     {
         Schema::create('uploads', function (Blueprint $table) {
             $table->id();
-            $table->string('file_name');
+            $table->string('file_name')->unique();
             $table->timestamp('uploaded_at')->useCurrent();
             $table->enum('status', ['pending', 'processing', 'failed', 'completed'])->default('pending');
             $table->timestamps();
